@@ -2,7 +2,7 @@ function [xd]=humanTraj(t,omega,tSim)
         
     deltaT = tSim/8;
     p1 = robotTraj(deltaT,omega);
-    p2 = [-0.1;0.4];
+    p2 = [-0.15;0.4];
     p3 = robotTraj(3*deltaT,omega);
     p4 = robotTraj(5*deltaT,omega);
     

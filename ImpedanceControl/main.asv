@@ -63,16 +63,12 @@ for i=1:length(t)
         Fh = [0;0];
     end
     
-    %admittance controller
     xE_dot = inv(Md/Ts+D)*( Fh + Md*xE_dot_old/Ts - K*(xE -xR) );
     
-    %kinematic controller
     q_dot = pinv(Jp)*xE_dot;
     
-    %integrate joint position
     q=Ts*q_dot+q;
     
-    %get end-effector position
     T = fkine(robot,q);
     xE = T(1:2,4);
     
@@ -80,7 +76,6 @@ for i=1:length(t)
     
     Xr(:,i) = xR;
     Xe(:,i) = xE;
-    Xh(:,i) = xH;
     XeDot(:,i) = xE_dot;
     Q(:,i) = q;
     QDot(:,i) = q_dot;
@@ -97,11 +92,6 @@ figure;
 plot(Xe(1,:),Xe(2,:));
 hold on;
 plot(Xr(1,:),Xr(2,:));
-hold on;
-plot(Xh(1,:),Xh(2,:));
-legend('x_E','x_R','x_H');
-ylabel('Y_b_a_s_e');
-xlabel('X_b_a_s_e');
 
 figure;
 plot(t,Eh);
@@ -109,16 +99,5 @@ hold on
 plot(t,Er);
 legend('Eh','Er');
 xlabel('time')
-ylabel('m');
 
-figure;
-plot(t,Q)
-xlabel('time');
-ylabel('rad');
-legend('q_1','q_2','q_3')
-
-figure;
-plot(t,QDot)
-xlabel('time');
-ylabel('rad/s');
-legend('qDot_1','qDot_2','qDot_3')
+fi
