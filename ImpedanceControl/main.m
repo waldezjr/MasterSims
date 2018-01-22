@@ -4,7 +4,7 @@ clc;
 clf;
 
 %% Simulation Parameters
-Ts = 0.01; % Sample time duration
+Ts = 0.001; % Sample time duration
 tSim = 10; %Simulation Time
 t = 0:Ts:tSim+1;
 
@@ -19,7 +19,7 @@ Kkin = [50 0;0 50];
 
 %% Human Impedance Parameters
 %Constant Parameters
-Kh = [500 0;0 500];
+Kh = [2000 0;0 2000];
 %Variable Parameters
 Kh0 = Kh;
 %VERIFY INITIAL VALUE
@@ -27,8 +27,8 @@ Kh0 = Kh;
 %% Robot Desired Impedance Parameters
 %Constant Parameters
 Md = [2 0;0 2];
-D = [25 0;0 25];
-Kd = [625 0;0 625];
+D = [64 0;0 64];
+Kd = [1000 0;0 1000];
 
 %Variable Parameters
 D0 = [1 0;0 2];
@@ -44,7 +44,14 @@ iccMax = 0.40;
 
 Fh = [0;0];
 
-alpha = 0.5;
+%% ICC Simulation Parameters
+
+iccMin = 0.05;
+iccMax = 0.50;
+Kicc = 25;
+
+alpha = 0;
+
 %START VARYING IT WITH TIME
 %TRY TO MAKE UNSTABLE VIBRATIONS APPEAR
 
@@ -56,7 +63,8 @@ xE = T(1:2,4);
 xRef=xE;
 xRef_dot_old = zeros(2,1);
 
-Xe=[]; XeDot=[]; Q=[]; QDot=[];Xr=[]; Eh=[]; Er=[]; Ekin=[]; Xref=[];
+Xe=[]; XeDot=[]; Q=[]; QDot=[];Xr=[]; Eh=[]; Er=[]; Ekin=[]; Xref=[]; Alpha=[];
+ICC=[];
 
 teste = [0;0];
 for i=1:length(t)
@@ -68,19 +76,33 @@ for i=1:length(t)
     xR = robotTraj(t(i),omega,tSim);
     xH = humanTraj(t(i),omega,tSim);
     
-    %if t(i)> tSim/8 && t(i) < 3 * tSim/8
-        %Fh = [-50;0];
-     %   Fh = -Kh*(xE - xH);
-    %elseif t(i)> 3*tSim/8 && t(i) < 5 * tSim/8
-        %Fh = [0;5];
-    %else
-     %   Fh = [0;0];
-    %end
+    %alpha variation for simulation
     
+    icc = Kicc * norm(xR-xH) + iccMin;
+    
+    if icc > iccMax
+        icc = iccMax;
+    end
+    
+    alpha = (icc - iccMin) / (iccMax - iccMin);
+    
+    %External disturbances    
+    if t(i)> 2 * tSim/8 && t(i) < 3 * tSim/8
+       % Fh = [-1;0];
+    elseif t(i)> 3*tSim/8 && t(i) < 5 * tSim/8
+       % Fh = [0;0];
+    else
+       % Fh = [0;0];
+    end
+    
+    %Variation of Stiffnesses
     Kd = Kd0 * (1-alpha);
     Kh = Kh0 * alpha;
     
+    %Human Spring
     Fh = -Kh*(xE - xH);
+    
+    %Fh = Fh*0.1*exp(-0.1*Ts);
     
     %admittance controller
     xRef_dot = inv(Md/Ts+D)*( Fh + Md*xRef_dot_old/Ts - Kd*(xE -xR) ); 
@@ -107,6 +129,9 @@ for i=1:length(t)
     Er(:,i) = norm(xE - xR);
     Eh(:,i) = norm(xE - xH);
     Ekin(:,i) = norm(xRef-xE);
+    Alpha(i) = alpha;
+    ICC(i) = icc;
+    
     
 end
 
@@ -133,17 +158,24 @@ plot(t,Er);
 hold on;
 plot(t,Ekin);
 legend('Eh','Er','Ekin');
-xlabel('time')
+xlabel('time(s)')
 ylabel('m');
 
 figure;
 plot(t,Q)
-xlabel('time');
+xlabel('time(s)');
 ylabel('rad');
 legend('q_1','q_2','q_3')
 
 figure;
 plot(t,QDot)
-xlabel('time');
+xlabel('time(s)');
 ylabel('rad/s');
 legend('qDot_1','qDot_2','qDot_3')
+
+figure;
+plot(t,Alpha,t,ICC);
+xlabel('time(s)');
+ylabel('%');
+legend('Alpha', 'icc');
+
