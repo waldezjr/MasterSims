@@ -4,7 +4,7 @@ clc;
 clf;
 
 %% Simulation Parameters
-Ts = 0.01; % Sample time duration
+Ts = 0.0001; % Sample time duration
 tSim = 10; %Simulation Time
 t = 0:Ts:tSim+1;
 
@@ -15,11 +15,11 @@ qr = [0 pi/2 pi/2]; % Ready Pose
 omega = 2*pi/tSim; % Trajectory angular speed
 
 %% Kinematic Controller
-Kkin = [50 0;0 50];
+Kkin = [100 0;0 100];
 
 %% Human Impedance Parameters
 %Constant Parameters
-Kh = [2000 0;0 2000];
+Kh = [10000 0;0 10000];
 %Variable Parameters
 Kh0 = Kh;
 %VERIFY INITIAL VALUE
@@ -27,7 +27,7 @@ Kh0 = Kh;
 %% Robot Desired Impedance Parameters
 %Constant Parameters
 Md = [2 0;0 2];
-D = [64 0;0 64];
+D = [32 0;0 32];
 Kd = [1000 0;0 1000];
 
 %Variable Parameters
@@ -76,7 +76,7 @@ for i=1:length(t)
     Jp = J([1:2],1:3);
     
     
-    xR = robotTraj(t(i),omega,tSim);
+    [xR,xRDot,xRDotDot] = robotTraj(t(i),omega,tSim);
     xH = humanTraj(t(i),omega,tSim);
     
     
@@ -111,11 +111,12 @@ for i=1:length(t)
     %Fh = Fh*0.1*exp(-0.1*Ts);
     
     %admittance controller
-    xRef_dot = inv(Md/Ts+D)*( Fh + Md*xRef_dot_old/Ts - Kd*(xE -xR) ); 
+    %xRef_dot = inv(Md/Ts+D)*( Fh + Md*xRef_dot_old/Ts - Kd*(xE -xR) ); 
+    %xRef = Ts*xRef_dot+ xRef;
+    
+    %new Admittance Controller with adaptive equilibrium point
+    xRef_dot = inv(Md/Ts+D)*( Fh + Md*(xRef_dot_old/Ts+(1-alpha)*xRDotDot)+D*(1-alpha)*xRDot - Kd*(xE -xR) ); 
     xRef = Ts*xRef_dot+ xRef;
-    
-    %new Admittance Controller
-    
     
     %kinematic controller
     q_dot = pinv(Jp)*(xRef_dot+Kkin*(xRef-xE));
@@ -161,18 +162,20 @@ hold on;
 plot(Xh(1,:),Xh(2,:));
 hold on;
 plot(Xref(1,:),Xref(2,:));
-plot(PMinJerk(1,:),PMinJerk(2,:));
-legend('x_E','x_R','x_H','X_r_e_f','X_M_J');
+%plot(PMinJerk(1,:),PMinJerk(2,:));
+legend('x_E','x_R','x_H','X_r_e_f');
 ylabel('Y_b_a_s_e');
 xlabel('X_b_a_s_e');
 
-figure;
-%plot(t,XeDot(1,:),t,XeDot(2,:));
-%hold on;
-plot(t,VMinJerk(1,:),t,VMinJerk(2,:));
-legend('v_M_J_X','v_M_J_Y');
-xlabel('time (s)');
-ylabel('m/s');
+% figure;
+% plot(t,PMinJerk(1,:),t,PMinJerk(2,:));
+% hold on;
+% plot(t,AMinJerk(1,:),t,AMinJerk(2,:));
+% hold on;
+% plot(t,VMinJerk(1,:),t,VMinJerk(2,:));
+% legend('p_M_J_X','p_M_J_Y','a_M_J_X','a_M_J_Y','v_M_J_X','v_M_J_Y');
+% xlabel('time (s)');
+% %ylabel('m/s');
 
 figure;
 plot(t,Eh);
