@@ -4,7 +4,7 @@ clc;
 clf;
 
 %% Simulation Parameters
-Ts = 0.001; % Sample time duration
+Ts = 0.01; % Sample time duration
 tSim = 10; %Simulation Time
 t = 0:Ts:tSim+1;
 
@@ -63,8 +63,10 @@ xE = T(1:2,4);
 xRef=xE;
 xRef_dot_old = zeros(2,1);
 
+xR_old = xE;
+
 Xe=[]; XeDot=[]; Q=[]; QDot=[];Xr=[]; Eh=[]; Er=[]; Ekin=[]; Xref=[]; Alpha=[];
-ICC=[];
+ICC=[]; PMinJerk=[]; VMinJerk=[];AMinJerk=[];
 
 teste = [0;0];
 for i=1:length(t)
@@ -73,8 +75,12 @@ for i=1:length(t)
     J  = jacob0(robot, q);
     Jp = J([1:2],1:3);
     
+    
     xR = robotTraj(t(i),omega,tSim);
     xH = humanTraj(t(i),omega,tSim);
+    
+    
+    [xEq,xEqDot,xEqDotDot]  = minJerkProfile(t(i),tSim,xR_old,xR);
     
     %alpha variation for simulation
     
@@ -108,6 +114,9 @@ for i=1:length(t)
     xRef_dot = inv(Md/Ts+D)*( Fh + Md*xRef_dot_old/Ts - Kd*(xE -xR) ); 
     xRef = Ts*xRef_dot+ xRef;
     
+    %new Admittance Controller
+    
+    
     %kinematic controller
     q_dot = pinv(Jp)*(xRef_dot+Kkin*(xRef-xE));
     
@@ -119,6 +128,8 @@ for i=1:length(t)
     xE = T(1:2,4);
     
     xRef_dot_old = xRef_dot;
+    
+    xR_old = xR;
     
     Xr(:,i) = xR;
     Xe(:,i) = xE;
@@ -132,6 +143,9 @@ for i=1:length(t)
     Alpha(i) = alpha;
     ICC(i) = icc;
     
+    PMinJerk(:,i) = xEq;
+    VMinJerk(:,i) = xEqDot;
+    AMinJerk(:,i) = xEqDotDot;
     
 end
 
@@ -147,9 +161,18 @@ hold on;
 plot(Xh(1,:),Xh(2,:));
 hold on;
 plot(Xref(1,:),Xref(2,:));
-legend('x_E','x_R','x_H','X_r_e_f');
+plot(PMinJerk(1,:),PMinJerk(2,:));
+legend('x_E','x_R','x_H','X_r_e_f','X_M_J');
 ylabel('Y_b_a_s_e');
 xlabel('X_b_a_s_e');
+
+figure;
+%plot(t,XeDot(1,:),t,XeDot(2,:));
+%hold on;
+plot(t,VMinJerk(1,:),t,VMinJerk(2,:));
+legend('v_M_J_X','v_M_J_Y');
+xlabel('time (s)');
+ylabel('m/s');
 
 figure;
 plot(t,Eh);
