@@ -4,7 +4,7 @@ clc;
 clf;
 
 %% Simulation Parameters
-Ts = 0.0001; % Sample time duration
+Ts = 0.001; % Sample time duration
 tSim = 10; %Simulation Time
 t = 0:Ts:tSim+1;
 
@@ -15,30 +15,26 @@ qr = [0 pi/2 pi/2]; % Ready Pose
 omega = 2*pi/tSim; % Trajectory angular speed
 
 %% Kinematic Controller
-Kkin = [100 0;0 100];
+Kkin = 50 * eye(2);
 
 %% Human Impedance Parameters
 %Constant Parameters
-Kh = [10000 0;0 10000];
+Kh = 2000 * eye(2);
 %Variable Parameters
 Kh0 = Kh;
 %VERIFY INITIAL VALUE
 
 %% Robot Desired Impedance Parameters
 %Constant Parameters
-Md = [2 0;0 2];
-D = [32 0;0 32];
-Kd = [1000 0;0 1000];
+Md = 2*eye(2);
+D  = 32*eye(2);
+Kd = 1000*eye(2);
 
 %Variable Parameters
-D0 = [1 0;0 2];
-D1 = [1 0;0 2];
+D0 = 1*eye(2);
+D1 = 1*eye(2);
 Kd0 = Kd;
 %VERIFY INITIAL VALUE
-
-%% ICC parameters
-iccMin = 0.05;
-iccMax = 0.40;
 
 %% Human Force
 
@@ -51,9 +47,6 @@ iccMax = 0.50;
 Kicc = 25;
 
 alpha = 0;
-
-%START VARYING IT WITH TIME
-%TRY TO MAKE UNSTABLE VIBRATIONS APPEAR
 
 %% Simulation
 q = qr'; %initialization
@@ -68,9 +61,8 @@ xR_old = xE;
 Xe=[]; XeDot=[]; Q=[]; QDot=[];Xr=[]; Eh=[]; Er=[]; Ekin=[]; Xref=[]; Alpha=[];
 ICC=[]; PMinJerk=[]; VMinJerk=[];AMinJerk=[];
 
-teste = [0;0];
+
 for i=1:length(t)
-    teste(:,i) = humanTraj(t(i),omega,tSim);
     
     J  = jacob0(robot, q);
     Jp = J([1:2],1:3);
@@ -80,7 +72,7 @@ for i=1:length(t)
     xH = humanTraj(t(i),omega,tSim);
     
     
-    [xEq,xEqDot,xEqDotDot]  = minJerkProfile(t(i),tSim,xR_old,xR);
+    [xEq,xEqDot,xEqDotDot] = minJerkProfile(t(i),tSim,xR_old,xR);
     
     %alpha variation for simulation
     
