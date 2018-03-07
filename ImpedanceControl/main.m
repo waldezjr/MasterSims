@@ -37,7 +37,6 @@ Kd0 = Kd;
 %VERIFY INITIAL VALUE
 
 %% Human Force
-
 Fh = [0;0];
 
 %% ICC Simulation Parameters
@@ -55,24 +54,21 @@ xE = T(1:2,4);
 
 xRef=xE;
 xRef_dot_old = zeros(2,1);
+xRef_dot = zeros(2,1);
+xEDot = zeros(2,1);
 
 xR_old = xE;
 
 Xe=[]; XeDot=[]; Q=[]; QDot=[];Xr=[]; Eh=[]; Er=[]; Ekin=[]; Xref=[]; Alpha=[];
-ICC=[]; PMinJerk=[]; VMinJerk=[];AMinJerk=[];
-
+ICC=[];
 
 for i=1:length(t)
     
     J  = jacob0(robot, q);
     Jp = J([1:2],1:3);
-    
-    
+       
     [xR,xRDot,xRDotDot] = robotTraj(t(i),omega,tSim);
     xH = humanTraj(t(i),omega,tSim);
-    
-    
-    [xEq,xEqDot,xEqDotDot] = minJerkProfile(t(i),tSim,xR_old,xR);
     
     %alpha variation for simulation
     
@@ -106,8 +102,10 @@ for i=1:length(t)
     %xRef_dot = inv(Md/Ts+D)*( Fh + Md*xRef_dot_old/Ts - Kd*(xE -xR) ); 
     %xRef = Ts*xRef_dot+ xRef;
     
-    %new Admittance Controller with adaptive equilibrium point
-    xRef_dot = inv(Md/Ts+D)*( Fh + Md*(xRef_dot_old/Ts+(1-alpha)*xRDotDot)+D*(1-alpha)*xRDot - Kd*(xE -xR) ); 
+    %even newer admittance controller block implementation
+    xRef_dot_dot = (1-alpha) * xRDotDot + inv(Md)*( Fh -D*(xEDot - (1-alpha)*xRDot ) - Kd*(xE - xR) );
+        %integrate xRef_dot_dot, and xRef_dot
+    xRef_dot = Ts * xRef_dot_dot + xRef_dot;
     xRef = Ts*xRef_dot+ xRef;
     
     %kinematic controller
@@ -119,6 +117,9 @@ for i=1:length(t)
     %get end-effector position
     T = fkine(robot,q);
     xE = T(1:2,4);
+    
+    %get end-effector velocity
+    xEDot = Jp * q_dot;
     
     xRef_dot_old = xRef_dot;
     
@@ -134,12 +135,7 @@ for i=1:length(t)
     Eh(:,i) = norm(xE - xH);
     Ekin(:,i) = norm(xRef-xE);
     Alpha(i) = alpha;
-    ICC(i) = icc;
-    
-    PMinJerk(:,i) = xEq;
-    VMinJerk(:,i) = xEqDot;
-    AMinJerk(:,i) = xEqDotDot;
-    
+    ICC(i) = icc;    
 end
 
 %% Plot Results
