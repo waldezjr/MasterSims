@@ -43,9 +43,15 @@ Fh = [0;0];
 
 iccMin = 0.05;
 iccMax = 0.50;
-Kicc = 25;
+Kicc = 20;
 
 alpha = 0;
+%% Lyapunov Fn Parameter
+gamma = min(eig(D)) / max(eig(Md));
+
+KdOld = Kd;
+
+
 
 %% Simulation
 q = qr'; %initialization
@@ -74,6 +80,10 @@ for i=1:length(t)
     
     icc = Kicc * norm(xR-xH) + iccMin;
     
+    sigmoid =(iccMax-iccMin) * 1/(1+exp(-(600*norm(xR-xH)-6))) + iccMin;
+    
+    icc = sigmoid;
+    
     if icc > iccMax
         icc = iccMax;
     end
@@ -90,7 +100,7 @@ for i=1:length(t)
     end
     
     %Variation of Stiffnesses
-    Kd = Kd0 * (1-alpha);
+    Kd = Kd0 * (1-alpha) + 10*eye(2); 
     Kh = Kh0 * alpha;
     
     %Human Spring
@@ -103,7 +113,8 @@ for i=1:length(t)
     %xRef = Ts*xRef_dot+ xRef;
     
     %even newer admittance controller block implementation
-    xRef_dot_dot = (1-alpha) * xRDotDot + inv(Md)*( Fh -D*(xEDot - (1-alpha)*xRDot ) - Kd*(xE - xR) );
+%     xRef_dot_dot = (1-alpha) * xRDotDot + inv(Md)*( Fh -D*(xEDot - (1-alpha)*xRDot ) - Kd*(xE - xR) );
+    xRef_dot_dot = xRDotDot + inv(Md)*( Fh -D*(xEDot - xRDot ) - Kd*(xE - xR) );
         %integrate xRef_dot_dot, and xRef_dot
     xRef_dot = Ts * xRef_dot_dot + xRef_dot;
     xRef = Ts*xRef_dot+ xRef;
@@ -125,6 +136,16 @@ for i=1:length(t)
     
     xR_old = xR;
     
+    %Calculating Lyapunov function
+    beta = Kd + gamma*D -gamma^2*Md;
+    v = ((xEDot - xRDot) + gamma*(xE - xR))' * Md * ((xEDot - xRDot) + gamma*(xE - xR))* 0.5 + ((xE - xR)'*beta*(xE - xR))*0.5; 
+    
+    %Calculating stability conditions
+    
+    f1 = (Kd(1) - KdOld(1)) / Ts ;
+    f2 = 2*gamma *Kd(1);    
+    KdOld = Kd;
+    
     Xr(:,i) = xR;
     Xe(:,i) = xE;
     Xh(:,i) = xH;
@@ -135,7 +156,11 @@ for i=1:length(t)
     Eh(:,i) = norm(xE - xH);
     Ekin(:,i) = norm(xRef-xE);
     Alpha(i) = alpha;
-    ICC(i) = icc;    
+    ICC(i) = icc;
+    SIG(i) = sigmoid;
+    V(i) = v;
+    F1(i) = f1;
+    F2(i) = f2;
 end
 
 %% Plot Results
@@ -188,8 +213,19 @@ ylabel('rad/s');
 legend('qDot_1','qDot_2','qDot_3')
 
 figure;
-plot(t,Alpha,t,ICC);
+plot(t,Alpha,t,ICC,t,SIG);
 xlabel('time(s)');
 ylabel('%');
-legend('Alpha', 'icc');
+legend('Alpha', 'icc', 'sigmoid');
+
+figure;
+plot(t,V);
+xlabel('time(s)');
+ylabel('J');
+
+figure;
+plot(t,F1,t,F2);
+xlabel('time(s)');
+ylabel('N /m.s');
+legend('k_d_o_t_x', '2 gamma k_x');
 
