@@ -2,6 +2,8 @@ clear all;
 close all;
 clc;
 clf;
+set(groot, 'defaultAxesTickLabelInterpreter','latex');
+set(groot, 'defaultLegendInterpreter','latex');
 
 %% Simulation Parameters
 Ts = 0.001; % Sample time duration
@@ -105,8 +107,7 @@ for i=1:length(t)
     
     %Human Spring
     Fh = -Kh*(xE - xH);
-    
-    %Fh = Fh*0.1*exp(-0.1*Ts);
+
     
     %admittance controller
     %xRef_dot = inv(Md/Ts+D)*( Fh + Md*xRef_dot_old/Ts - Kd*(xE -xR) ); 
@@ -167,65 +168,80 @@ end
 
 %robot.animate(Q');
 
-%figure;
-plot(Xe(1,:),Xe(2,:));
-hold on;
-plot(Xr(1,:),Xr(2,:));
-hold on;
-plot(Xh(1,:),Xh(2,:));
-hold on;
-plot(Xref(1,:),Xref(2,:));
-%plot(PMinJerk(1,:),PMinJerk(2,:));
-legend('x_E','x_R','x_H','X_r_e_f');
-ylabel('Y_b_a_s_e');
-xlabel('X_b_a_s_e');
+figure('pos',[10 10 800 600]);
 
-% figure;
-% plot(t,PMinJerk(1,:),t,PMinJerk(2,:));
-% hold on;
-% plot(t,AMinJerk(1,:),t,AMinJerk(2,:));
-% hold on;
-% plot(t,VMinJerk(1,:),t,VMinJerk(2,:));
-% legend('p_M_J_X','p_M_J_Y','a_M_J_X','a_M_J_Y','v_M_J_X','v_M_J_Y');
-% xlabel('time (s)');
-% %ylabel('m/s');
-
-figure;
-plot(t,Eh);
+plot(Xe(1,:),Xe(2,:),'LineWidth',2);
+hold on;
+plot(Xr(1,:),Xr(2,:),'LineWidth',2);
+hold on;
+plot(Xh(1,:),Xh(2,:),'LineWidth',2);
+hold on;
+% plot(Xref(1,:),Xref(2,:));
+legend('$x_e$','$x_r^d(t)$','$x_h^d(t)$');
+% legend('$x_r^d(t)$','$x_h^d(t)$');
+title('Task Trajectories')
+ylabel('y_{b}(m)');
+xlabel('x_{b}(m)');
+axis([-0.20 0.15 0.25 0.55])
+set(gca,'FontSize',25)
+set(findall(gcf,'type','text'),'FontSize',25)
+% 
+figure('pos',[10 10 800 600]);
+plot(t,Eh,'LineWidth',2);
 hold on
-plot(t,Er);
-hold on;
-plot(t,Ekin);
-legend('Eh','Er','Ekin');
+plot(t,Er,'LineWidth',2);
+% hold on;
+% plot(t,Ekin,'LineWidth',2);
+legend('$\Vert e_h^d(t)\Vert$','$\Vert e_r^d(t)\Vert$');
 xlabel('time(s)')
-ylabel('m');
-
-figure;
-plot(t,Q)
+ylabel('Error norm (m)');
+title('Error Norms - Adaptive \alpha(t)')
+set(gca,'FontSize',25)
+set(findall(gcf,'type','text'),'FontSize',25)
+% 
+figure('pos',[10 10 800 600]);
+plot(t,Q,'LineWidth',2)
 xlabel('time(s)');
 ylabel('rad');
-legend('q_1','q_2','q_3')
-
-figure;
-plot(t,QDot)
+title('Joint Angles - Adaptive \alpha(t)')
+legend('$q_1$','$q_2$','$q_3$')
+set(gca,'FontSize',25)
+set(findall(gcf,'type','text'),'FontSize',25)
+% 
+figure('pos',[10 10 800 600]);
+plot(t,QDot,'LineWidth',2)
 xlabel('time(s)');
 ylabel('rad/s');
-legend('qDot_1','qDot_2','qDot_3')
-
-figure;
-plot(t,Alpha,t,ICC,t,SIG);
+legend('$\dot{q}_1$','$\dot{q}_2$','$\dot{q}_3$')
+set(gca,'FontSize',25)
+set(findall(gcf,'type','text'),'FontSize',25)
+title('Joint Velocities - \alpha(t) = 1.0')
+% 
+figure('pos',[10 10 800 600]);
+plot(t,Alpha,t,ICC,'LineWidth',2);
 xlabel('time(s)');
-ylabel('%');
-legend('Alpha', 'icc', 'sigmoid');
-
-figure;
-plot(t,V);
+ylabel('');
+legend('$\alpha(t)$', 'icc(t)');
+title('\alpha(t) and icc(t)')
+set(gca,'FontSize',25)
+set(findall(gcf,'type','text'),'FontSize',25)
+% 
+figure('pos',[10 10 800 600]);
+plot(t,V,'LineWidth',2);
 xlabel('time(s)');
 ylabel('J');
-
-figure;
-plot(t,F1,t,F2);
+title('Lyapunov Function V(t)')
+legend('V(t)')
+set(gca,'FontSize',25)
+set(findall(gcf,'type','text'),'FontSize',25)
+% 
+figure('pos',[10 10 800 600]);
+plot(t,F1,t,F2,'LineWidth',2);
 xlabel('time(s)');
-ylabel('N /m.s');
-legend('k_d_o_t_x', '2 gamma k_x');
-
+ylabel('N/m.s');
+legend('$\dot{k}_x$', '$2 \gamma k_x$');
+title('Stability Condition')
+set(gca,'FontSize',25)
+set(findall(gcf,'type','text'),'FontSize',25)
+axis([0 12 -10000 40000])
+% 
