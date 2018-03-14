@@ -49,7 +49,7 @@ Kicc = 20;
 
 alpha = 0;
 %% Lyapunov Fn Parameter
-gamma = min(eig(D)) / max(eig(Md));
+gamma = min(eig(D)) / max(eig(Md)) - 1;
 
 KdOld = Kd;
 
@@ -230,8 +230,8 @@ figure('pos',[10 10 800 600]);
 plot(t,V,'LineWidth',2);
 xlabel('time(s)');
 ylabel('J');
-title('Lyapunov Function V(t)')
-legend('V(t)')
+title('Lyapunov Function V_2(t)')
+legend('$V_2(t)$')
 set(gca,'FontSize',25)
 set(findall(gcf,'type','text'),'FontSize',25)
 % 
