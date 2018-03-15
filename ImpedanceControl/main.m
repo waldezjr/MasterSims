@@ -78,7 +78,7 @@ for i=1:length(t)
     [xR,xRDot,xRDotDot] = robotTraj(t(i),omega,tSim);
     xH = humanTraj(t(i),omega,tSim);
     
-    %alpha variation for simulation
+%     alpha variation for simulation
     
     icc = Kicc * norm(xR-xH) + iccMin;
     
@@ -170,14 +170,15 @@ end
 
 figure('pos',[10 10 800 600]);
 
-plot(Xe(1,:),Xe(2,:),'LineWidth',2);
-hold on;
+
 plot(Xr(1,:),Xr(2,:),'LineWidth',2);
 hold on;
 plot(Xh(1,:),Xh(2,:),'LineWidth',2);
 hold on;
+plot(Xe(1,:),Xe(2,:),'LineWidth',2);
+hold on;
 % plot(Xref(1,:),Xref(2,:));
-legend('$x_e$','$x_r^d(t)$','$x_h^d(t)$');
+legend('$x_r^d(t)$','$x_h^d(t)$','$x_e$');
 % legend('$x_r^d(t)$','$x_h^d(t)$');
 title('Task Trajectories')
 ylabel('y_{b}(m)');
