@@ -5,6 +5,6 @@ L(1) = Link([ 0 0 0.5	0	0], 'standard');
 L(2) = Link([ 0 0 0.5	0	0], 'standard');
 L(3) = Link([ 0 0 0.5	0	0], 'standard');
 
-planar3dof = SerialLink(L, 'name', 'Planar RRR');
+planar3dof = SerialLink(L, 'name', 'Planar 3R');
 
 end

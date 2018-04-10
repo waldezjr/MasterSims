@@ -13,8 +13,11 @@ t = 0:Ts:tSim+1;
 %% Robot Parameters
 robot = planar3dof();
 qr = [0 pi/2 pi/2]; % Ready Pose
-%robot.teach(qr); % Show Pose
+robot.teach(qr); % Show Pose
 omega = 2*pi/tSim; % Trajectory angular speed
+set(gca,'FontSize',25)
+set(findall(gcf,'type','text'),'FontSize',25)
+
 
 %% Kinematic Controller
 Kkin = 50 * eye(2);
@@ -45,9 +48,9 @@ Fh = [0;0];
 
 iccMin = 0.05;
 iccMax = 0.50;
-Kicc = 20;
+% Kicc = 20;
 
-alpha = 0;
+alpha = 0.5;
 %% Lyapunov Fn Parameter
 gamma = min(eig(D)) / max(eig(Md)) - 1;
 
@@ -80,7 +83,7 @@ for i=1:length(t)
     
 %     alpha variation for simulation
     
-    icc = Kicc * norm(xR-xH) + iccMin;
+%     icc = Kicc * norm(xR-xH) + iccMin;
     
     sigmoid =(iccMax-iccMin) * 1/(1+exp(-(600*norm(xR-xH)-6))) + iccMin;
     
@@ -90,7 +93,7 @@ for i=1:length(t)
         icc = iccMax;
     end
     
-    alpha = (icc - iccMin) / (iccMax - iccMin);
+%     alpha = (icc - iccMin) / (iccMax - iccMin);
     
     %External disturbances    
     if t(i)> 2 * tSim/8 && t(i) < 3 * tSim/8
@@ -143,8 +146,8 @@ for i=1:length(t)
     
     %Calculating stability conditions
     
-    f1 = (Kd(1) - KdOld(1)) / Ts ;
-    f2 = 2*gamma *Kd(1);    
+    f1 = (Kd(4) - KdOld(4)) / Ts ;
+    f2 = 2*gamma *Kd(4);    
     KdOld = Kd;
     
     Xr(:,i) = xR;
@@ -178,7 +181,7 @@ hold on;
 plot(Xe(1,:),Xe(2,:),'LineWidth',2);
 hold on;
 % plot(Xref(1,:),Xref(2,:));
-legend('$x_r^d(t)$','$x_h^d(t)$','$x_e$');
+lgd = legend('$x_r^d(t)$','$x_h^d(t)$','$x_e$');
 % legend('$x_r^d(t)$','$x_h^d(t)$');
 title('Task Trajectories')
 ylabel('y_{b}(m)');
@@ -186,6 +189,7 @@ xlabel('x_{b}(m)');
 axis([-0.20 0.15 0.25 0.55])
 set(gca,'FontSize',25)
 set(findall(gcf,'type','text'),'FontSize',25)
+% lgd.FontSize = 50;
 % 
 figure('pos',[10 10 800 600]);
 plot(t,Eh,'LineWidth',2);
@@ -193,56 +197,62 @@ hold on
 plot(t,Er,'LineWidth',2);
 % hold on;
 % plot(t,Ekin,'LineWidth',2);
-legend('$\Vert e_h^d(t)\Vert$','$\Vert e_r^d(t)\Vert$');
+lgd = legend('$\Vert e_h^d(t)\Vert$','$\Vert e_r^d(t)\Vert$');
 xlabel('time(s)')
 ylabel('Error norm (m)');
-title('Error Norms - Adaptive \alpha(t)')
+title('Error Norms - \alpha(t) = 0.5')
 set(gca,'FontSize',25)
 set(findall(gcf,'type','text'),'FontSize',25)
+% lgd.FontSize = 50;
 % 
 figure('pos',[10 10 800 600]);
 plot(t,Q,'LineWidth',2)
 xlabel('time(s)');
 ylabel('rad');
-title('Joint Angles - Adaptive \alpha(t)')
-legend('$q_1$','$q_2$','$q_3$')
+title('Joint Angles - \alpha(t) = 0.5')
+lgd = legend('$q_1$','$q_2$','$q_3$');
 set(gca,'FontSize',25)
 set(findall(gcf,'type','text'),'FontSize',25)
+% lgd.FontSize = 50;
 % 
 figure('pos',[10 10 800 600]);
 plot(t,QDot,'LineWidth',2)
 xlabel('time(s)');
 ylabel('rad/s');
-legend('$\dot{q}_1$','$\dot{q}_2$','$\dot{q}_3$')
+lgd = legend('$\dot{q}_1$','$\dot{q}_2$','$\dot{q}_3$');
 set(gca,'FontSize',25)
 set(findall(gcf,'type','text'),'FontSize',25)
-title('Joint Velocities - \alpha(t) = 1.0')
+title('Joint Velocities - \alpha(t) = 0.5 ')
+% lgd.FontSize = 50;
 % 
 figure('pos',[10 10 800 600]);
 plot(t,Alpha,t,ICC,'LineWidth',2);
 xlabel('time(s)');
 ylabel('');
-legend('$\alpha(t)$', 'icc(t)');
+lgd = legend('$\alpha(t)$', 'icc(t)');
 title('\alpha(t) and icc(t)')
 set(gca,'FontSize',25)
 set(findall(gcf,'type','text'),'FontSize',25)
+% lgd.FontSize = 50;
 % 
 figure('pos',[10 10 800 600]);
 plot(t,V,'LineWidth',2);
 xlabel('time(s)');
 ylabel('J');
 title('Lyapunov Function V_2(t)')
-legend('$V_2(t)$')
+lgd = legend('$V_2(t)$');
 set(gca,'FontSize',25)
 set(findall(gcf,'type','text'),'FontSize',25)
+% lgd.FontSize = 50;
 % 
 figure('pos',[10 10 800 600]);
 plot(t,F1,t,F2,'LineWidth',2);
 xlabel('time(s)');
 ylabel('N/m.s');
-legend('$\dot{k}_x$', '$2 \gamma k_x$');
+lgd = legend('$\dot{k}_y$', '$2 \gamma k_y$');
 title('Stability Condition')
 set(gca,'FontSize',25)
 set(findall(gcf,'type','text'),'FontSize',25)
 axis([0 12 -10000 40000])
+% lgd.FontSize = 50;
 % 
