@@ -50,7 +50,7 @@ iccMin = 0.05;
 iccMax = 0.50;
 % Kicc = 20;
 
-alpha = 0.5;
+alpha = 0;
 %% Lyapunov Fn Parameter
 gamma = min(eig(D)) / max(eig(Md)) - 1;
 
@@ -93,7 +93,7 @@ for i=1:length(t)
         icc = iccMax;
     end
     
-%     alpha = (icc - iccMin) / (iccMax - iccMin);
+    alpha = (icc - iccMin) / (iccMax - iccMin);
     
     %External disturbances    
     if t(i)> 2 * tSim/8 && t(i) < 3 * tSim/8
@@ -118,7 +118,7 @@ for i=1:length(t)
     
     %even newer admittance controller block implementation
 %     xRef_dot_dot = (1-alpha) * xRDotDot + inv(Md)*( Fh -D*(xEDot - (1-alpha)*xRDot ) - Kd*(xE - xR) );
-    xRef_dot_dot = xRDotDot + inv(Md)*( Fh -D*(xEDot - xRDot ) - Kd*(xE - xR) );
+    xRef_dot_dot = xRDotDot + inv(Md)*( Fh -D*(xRef_dot - xRDot ) - Kd*(xRef - xR) );
         %integrate xRef_dot_dot, and xRef_dot
     xRef_dot = Ts * xRef_dot_dot + xRef_dot;
     xRef = Ts*xRef_dot+ xRef;
