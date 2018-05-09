@@ -255,10 +255,10 @@ figure('pos',[10 10 800 600]);
 plot(t,F1,t,F2,'LineWidth',2);
 xlabel('time(s)');
 ylabel('N/m.s');
-lgd = legend('$\dot{k}_y \left( 1+ \frac{\gamma m_d}{k_y m_d} \right)$', '$2 \gamma k_y$');
+lgd = legend('$\dot{k}_y$', '$2 \gamma k_y$');
 title('Stability Condition')
 set(gca,'FontSize',25)
 set(findall(gcf,'type','text'),'FontSize',25)
-axis([0 14 -10000 40000])
+axis([0 12 -10000 40000])
 lgd.FontSize = 35;
 % 
